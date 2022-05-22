@@ -4,6 +4,8 @@ import io.github.tundraclimate.finelib.FineLib
 import io.github.tundraclimate.finelib.addon.server.RegisterEvent
 import io.github.tundraclimate.hypercrafttable.currentRecipes
 import io.github.tundraclimate.hypercrafttable.io.json.RecipeJsonWriter
+import io.github.tundraclimate.hypercrafttable.server.CustomCraftEvent
+import org.bukkit.Bukkit
 import org.bukkit.Material
 import org.bukkit.NamespacedKey
 import org.bukkit.entity.Player
@@ -67,17 +69,35 @@ object InventoryClickListener : RegisterEvent {
                 return list.filter { it }.size == 9
             }
             craft()
+            Bukkit.getServer().pluginManager.callEvent(CustomCraftEvent(
+                e.whoClicked as Player,
+                e.currentItem!!,
+                currentRecipe,
+                e.clickedInventory!!,
+                false
+            ))
             val cursor = e.cursor ?: return
             val currentItem = e.currentItem ?: return
             //シフトクリック
             if (e.click.isShiftClick) {
                 val inv = e.whoClicked.inventory
                 val result = e.currentItem?.clone()
+                var count = 1
                 while (true) {
                     if (!isCraft()) break
                     craft()
+                    count++
                     inv.addItem(result)
                 }
+                val r = e.currentItem!!.clone()
+                r.amount *= count
+                Bukkit.getServer().pluginManager.callEvent(CustomCraftEvent(
+                    e.whoClicked as Player,
+                    r,
+                    currentRecipe,
+                    e.clickedInventory!!,
+                    true
+                ))
             }
             //アイテム重ねる
             if (cursor.isSimilar(currentItem)) {
