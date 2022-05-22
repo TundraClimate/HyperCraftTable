@@ -1,0 +1,13 @@
+name: HyperCraftTable
+version: '${version}'
+main: io.github.tundraclimate.hypercrafttable.HyperCraftTable
+api-version: 1.18
+
+commands:
+  writer:
+    description: write Recipe to Json
+    permission: ct.*
+
+permissions:
+  ct.*:
+    default: op
