@@ -6,9 +6,11 @@ import io.github.tundraclimate.hypercrafttable.currentRecipes
 import io.github.tundraclimate.hypercrafttable.io.json.RecipeJsonWriter
 import org.bukkit.Material
 import org.bukkit.NamespacedKey
+import org.bukkit.entity.Player
 import org.bukkit.event.Event
 import org.bukkit.event.EventHandler
 import org.bukkit.event.inventory.InventoryClickEvent
+import org.bukkit.inventory.CraftingInventory
 import org.bukkit.inventory.Inventory
 import org.bukkit.inventory.ItemStack
 import org.bukkit.persistence.PersistentDataType
@@ -17,7 +19,6 @@ object InventoryClickListener : RegisterEvent {
     @EventHandler
     private fun onInventoryClick(e: InventoryClickEvent) {
         val currentContainer = e.currentItem?.itemMeta?.persistentDataContainer
-        val cursorContainer = e.cursor?.itemMeta?.persistentDataContainer
 
         //レシピリザルトのクリック判定
         if (e.clickedInventory?.indexOf(e.currentItem) == 15 && currentContainer?.has(
@@ -42,20 +43,26 @@ object InventoryClickListener : RegisterEvent {
                     it[21]
                 )
             } ?: return
+
             //クラフト処理
             fun craft() {
                 (0..8).forEach {
-                    (table[it] ?: ItemStack(Material.AIR)).amount -= (currentRecipe[it] ?: ItemStack(Material.AIR)).amount
+                    (table[it] ?: ItemStack(Material.AIR)).amount -= (currentRecipe[it]
+                        ?: ItemStack(Material.AIR)).amount
                 }
             }
+
             //クラフト判定
             fun isCraft(): Boolean {
                 val list = mutableListOf<Boolean>()
                 (0..8).forEach {
-                    list.add(when {
-                        (table[it] ?: ItemStack(Material.AIR)).amount >= (currentRecipe[it] ?: ItemStack(Material.AIR)).amount -> true
-                        else -> false
-                    })
+                    list.add(
+                        when {
+                            (table[it] ?: ItemStack(Material.AIR)).amount >= (currentRecipe[it]
+                                ?: ItemStack(Material.AIR)).amount -> true
+                            else -> false
+                        }
+                    )
                 }
                 return list.filter { it }.size == 9
             }
@@ -80,25 +87,23 @@ object InventoryClickListener : RegisterEvent {
             }
         }
 
-        //Json書き込み処理
+
         if (
-            currentContainer?.has(NamespacedKey(FineLib.getPlugin(), "ct.c"), PersistentDataType.STRING) == true ||
-            cursorContainer?.has(NamespacedKey(FineLib.getPlugin(), "ct.c"), PersistentDataType.STRING) == true
+            currentContainer?.has(NamespacedKey(FineLib.getPlugin(), "ct.c"), PersistentDataType.STRING) == true
         ) {
             //クリックのキャンセル
             e.isCancelled = true
             e.result = Event.Result.DENY
+            if (currentContainer.has(NamespacedKey(FineLib.getPlugin(), "ct.e"), PersistentDataType.STRING)) {
+                val ct = e.whoClicked.openWorkbench(null, true)?.topInventory
+            }
 
-
+            //Json書き込み処理
             if (
-                currentContainer?.has(
+                currentContainer.has(
                     NamespacedKey(FineLib.getPlugin(), "ct.writer"),
                     PersistentDataType.STRING
-                ) == true ||
-                cursorContainer?.has(
-                    NamespacedKey(FineLib.getPlugin(), "ct.writer"),
-                    PersistentDataType.STRING
-                ) == true
+                )
             ) {
                 //Json出力
                 val check = writableCheck(e.clickedInventory!!)
