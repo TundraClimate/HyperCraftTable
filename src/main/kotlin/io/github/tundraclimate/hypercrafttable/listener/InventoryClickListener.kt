@@ -68,23 +68,28 @@ object InventoryClickListener : RegisterEvent {
                 }
                 return list.filter { it }.size == 9
             }
-            craft()
-            Bukkit.getServer().pluginManager.callEvent(CustomCraftEvent(
-                e.whoClicked as Player,
-                e.currentItem!!,
-                currentRecipe,
-                e.clickedInventory!!,
-                false
-            ))
             val cursor = e.cursor ?: return
             val currentItem = e.currentItem ?: return
+            if (!e.click.isShiftClick) {
+                craft()
+                Bukkit.getServer().pluginManager.callEvent(
+                    CustomCraftEvent(
+                        e.whoClicked as Player,
+                        e.currentItem!!,
+                        currentRecipe,
+                        e.clickedInventory!!,
+                        false
+                    )
+                )
+            }
+
             //シフトクリック
-            if (e.click.isShiftClick) {
+            else {
                 val inv = e.whoClicked.inventory
                 val result = e.currentItem?.clone()
-                var count = 1
-                while (true) {
-                    if (!isCraft()) break
+                var count = 0
+                e.isCancelled = true
+                while (isCraft()) {
                     craft()
                     count++
                     inv.addItem(result)
